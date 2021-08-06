@@ -32,6 +32,7 @@ use Omnipay;
 use PDF;
 use PhpSpec\Exception\Exception;
 use Validator;
+use RedisManager;
 
 class EventCheckoutApiController extends ApiBaseController
 {
@@ -66,7 +67,11 @@ class EventCheckoutApiController extends ApiBaseController
         /*
          * Order expires after X min
          */
+
+        // var_dump(auth('api')->user());
         $order_expires_time = Carbon::now()->addMinutes(config('attendize.checkout_timeout_after'));
+
+        // dd($order_expires_time);
 
         $event = Event::findOrFail($event_id);
 
@@ -82,7 +87,7 @@ class EventCheckoutApiController extends ApiBaseController
         /*
          * Remove any tickets the user has reserved
          */
-        ReservedTickets::where('session_id', '=', session()->getId())->delete();
+        ReservedTickets::where('session_id', '=', auth('api')->user()->token)->delete();
 
         /*
          * Go though the selected tickets and check if they're available
@@ -151,7 +156,7 @@ class EventCheckoutApiController extends ApiBaseController
             $reservedTickets->event_id = $event_id;
             $reservedTickets->quantity_reserved = $current_ticket_quantity;
             $reservedTickets->expires = $order_expires_time;
-            $reservedTickets->session_id = session()->getId();
+            $reservedTickets->session_id = auth('api')->user()->token;
             $reservedTickets->save();
 
             for ($i = 0; $i < $current_ticket_quantity; $i++) {
@@ -196,11 +201,12 @@ class EventCheckoutApiController extends ApiBaseController
         }
 
         $paymentGateway = $activeAccountPaymentGateway ? $activeAccountPaymentGateway->payment_gateway : false;
+        
 
         /*
          * The 'ticket_order_{event_id}' session stores everything we need to complete the transaction.
          */
-        session()->put('ticket_order_' . $event->id, [
+        RedisManager::set('ticket_order_' . $event->id, json_encode([
             'validation_rules'        => $validation_rules,
             'validation_messages'     => $validation_messages,
             'event_id'                => $event->id,
@@ -218,7 +224,8 @@ class EventCheckoutApiController extends ApiBaseController
             'affiliate_referral'      => Cookie::get('affiliate_' . $event_id),
             'account_payment_gateway' => $activeAccountPaymentGateway,
             'payment_gateway'         => $paymentGateway
-        ]);
+        ]));
+        // dd(RedisManager::get('ticket_order_' . $event->id));
 
         /*
          * If we're this far assume everything is OK and redirect them
@@ -249,59 +256,101 @@ class EventCheckoutApiController extends ApiBaseController
      */
     public function showEventCheckout(Request $request, $event_id)
     {
-        $order_session = session()->get('ticket_order_' . $event_id);
+        $order_session_encoded = RedisManager::get('ticket_order_' . $event_id);
+        
+        $order_session = json_decode($order_session_encoded);
+        //   dd($order_session->expires);
+        if (!$order_session || $order_session->expires < Carbon::now()) {
 
-        if (!$order_session || $order_session['expires'] < Carbon::now()) {
-            $route_name = $this->is_embedded ? 'showEmbeddedEventPage' : 'showEventPage';
-            return redirect()->route($route_name, ['event_id' => $event_id]);
+            if ($this->is_embedded) {
+         
+            return response()->json([
+                'status' => 'success',
+                'event_id' => $event_id,
+                'is_embedded' => 1
+
+            ]);
+        }else{
+            return response()->json([
+                'status' => 'success',
+                'event_id' => $event_id,
+                'is_embedded' => 0
+
+            ]);
+        }
+            // $route_name = $this->is_embedded ? 'showEmbeddedEventPage' : 'showEventPage';
+            // return redirect()->route($route_name, ['event_id' => $event_id]);
         }
 
-        $secondsToExpire = Carbon::now()->diffInSeconds($order_session['expires']);
+        $secondsToExpire = Carbon::now()->diffInSeconds($order_session->expires);
 
-        $event = Event::findorFail($order_session['event_id']);
+        $event = Event::findorFail($order_session->event_id);
 
-        $orderService = new OrderService($order_session['order_total'], $order_session['total_booking_fee'], $event);
+        $orderService = new OrderService($order_session->order_total, $order_session->total_booking_fee, $event);
         $orderService->calculateFinalCosts();
+        // dd($orderService->calculateFinalCosts());
+        $order_session = (array)$order_session;
+        
+        $data = array_merge($order_session, [
+            'event'       => $event,
+            'secondsToExpire' => $secondsToExpire,
+            'is_embedded'     => $this->is_embedded,
+            'orderService'    => $orderService
+        ]);
 
-        $data = $order_session + [
-                'event'           => $event,
-                'secondsToExpire' => $secondsToExpire,
-                'is_embedded'     => $this->is_embedded,
-                'orderService'    => $orderService
-                ];
+    // dd($data['secondsToExpire']);
+                
+                
+
+                
 
         if ($this->is_embedded) {
-            return view('Public.ViewEvent.Embedded.EventPageCheckout', $data);
+         
+            return response()->json([
+                'status' => 'success',
+                'data' => $data,
+            ]);
         }
 
-        return view('Public.ViewEvent.EventPageCheckout', $data);
+       
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $data,
+        ]);
 
     }
 
     public function postValidateOrder(Request $request, $event_id)
     {
+        
         //If there's no session kill the request and redirect back to the event homepage.
-        // if (!session()->get('ticket_order_' . $event_id)) {
-        //     return response()->json([
-        //         'status'      => 'error',
-        //         'message'     => 'Your session has expired.',
-        //         'redirectUrl' => route('showEventPage', [
-        //             'event_id' => $event_id,
-        //         ])
-        //     ]);
-        // }
 
-        $request_data = session()->get('ticket_order_' . $event_id . ".request_data");
+        // var_dump(auth('api')->user()); RedisManager
+
+
+        if (json_decode(!RedisManager::get('ticket_order_' . $event_id))) {
+            return response()->json([
+                'status'      => 'error',
+                'message'     => 'Your session has expired.',
+                'redirectUrl' => route('showEventPage', [
+                    'event_id' => $event_id,
+                ])
+            ]);
+        }
+
+        $request_data = json_decode(RedisManager::get('ticket_order_' . $event_id . ".request_data"), true);
         $request_data = (!empty($request_data[0])) ? array_merge($request_data[0], $request->all())
                                                    : $request->all();
+                                    
 
-        session()->remove('ticket_order_' . $event_id . '.request_data');
-        session()->push('ticket_order_' . $event_id . '.request_data', $request_data);
+        RedisManager::del('ticket_order_' . $event_id . '.request_data');
+        RedisManager::set('ticket_order_' . $event_id . '.request_data', json_encode($request_data));
 
         $event = Event::findOrFail($event_id);
         $order = new Order();
-        $ticket_order = session()->get('ticket_order_' . $event_id);
-
+        $ticket_order = json_decode(RedisManager::get('ticket_order_' . $event_id), true);
+//  dd(request()->all());
         $validation_rules = $ticket_order['validation_rules'];
         $validation_messages = $ticket_order['validation_messages'];
 
@@ -349,7 +398,7 @@ class EventCheckoutApiController extends ApiBaseController
 
     public function showEventPayment(Request $request, $event_id)
     {
-        $order_session = session()->get('ticket_order_' . $event_id);
+        $order_session = json_decode(RedisManager::get('ticket_order_' . $event_id));
         $event = Event::findOrFail($event_id);
 
         $payment_gateway = $order_session['payment_gateway'];
@@ -389,16 +438,18 @@ class EventCheckoutApiController extends ApiBaseController
      */
     public function postCreateOrder(Request $request, $event_id)
     {
-        $request_data = $ticket_order = session()->get('ticket_order_' . $event_id . ".request_data",[0 => []]);
+        $request_data = $ticket_order = json_decode(RedisManager::get('ticket_order_' . $event_id . ".request_data")) ?? [0 => []];
         $request_data = array_merge($request_data[0], $request->except(['cardnumber', 'cvc']));
+        RedisManager::del('ticket_order_' . $event_id . ".request_data");
+        RedisManager::set('ticket_order_' . $event_id . ".request_data", json_encode($request_data));
+        
 
-        session()->remove('ticket_order_' . $event_id . '.request_data');
-        session()->push('ticket_order_' . $event_id . '.request_data', $request_data);
-
-        $ticket_order = session()->get('ticket_order_' . $event_id);
+        $ticket_order = json_decode(RedisManager::get('ticket_order_' . $event_id));
         $event = Event::findOrFail($event_id);
 
         // $order_requires_payment = 1;
+
+        dd($ticket_order);
         
         $order_requires_payment = $ticket_order['order_requires_payment'];
 
@@ -433,12 +484,12 @@ class EventCheckoutApiController extends ApiBaseController
 
             if ($response->isSuccessful()) {
 
-                session()->push('ticket_order_' . $event_id . '.transaction_id',
+                RedisManager::set('ticket_order_' . $event_id . '.transaction_id',
                     $response->getTransactionReference());
 
                 $additionalData = ($gateway->storeAdditionalData()) ? $gateway->getAdditionalData($response) : array();
 
-                session()->push('ticket_order_' . $event_id . '.transaction_data',
+                RedisManager::set('ticket_order_' . $event_id . '.transaction_data',
                                 $gateway->getTransactionData() + $additionalData);
 
                 $gateway->completeTransaction($additionalData);
@@ -449,7 +500,7 @@ class EventCheckoutApiController extends ApiBaseController
 
                 $additionalData = ($gateway->storeAdditionalData()) ? $gateway->getAdditionalData($response) : array();
 
-                session()->push('ticket_order_' . $event_id . '.transaction_data',
+                RedisManager::set('ticket_order_' . $event_id . '.transaction_data',
                                 $gateway->getTransactionData() + $additionalData);
 
                 Log::info("Redirect url: " . $response->getRedirectUrl());
@@ -499,7 +550,7 @@ class EventCheckoutApiController extends ApiBaseController
     public function showEventCheckoutPaymentReturn(Request $request, $event_id)
     {
 
-        $ticket_order = session()->get('ticket_order_' . $event_id);
+        $ticket_order = json_decode(RedisManager::get('ticket_order_' . $event_id));
 
         $payment_gateway_config = $ticket_order['account_payment_gateway']->config + [
                 'testMode' => config('attendize.enable_test_payments')];
@@ -511,10 +562,10 @@ class EventCheckoutApiController extends ApiBaseController
 
 
         if ($response->isSuccessful()) {
-            session()->push('ticket_order_' . $event_id . '.transaction_id', $response->getTransactionReference());
+            RedisManager::get('ticket_order_' . $event_id . '.transaction_id', $response->getTransactionReference());
             return $this->completeOrder($event_id, false);
         } else {
-            session()->flash('message', $response->getMessage());
+            // session()->flash('message', $response->getMessage());
             return response()->redirectToRoute('showEventPayment', [
                 'event_id'          => $event_id,
                 'is_payment_failed' => 1,
@@ -537,7 +588,7 @@ class EventCheckoutApiController extends ApiBaseController
         try {
 
             $order = new Order();
-            $ticket_order = session()->get('ticket_order_' . $event_id);
+            $ticket_order = json_decode(RedisManager::get('ticket_order_' . $event_id));
 
             $request_data = $ticket_order['request_data'][0];
             $event = Event::findOrFail($ticket_order['event_id']);
@@ -715,12 +766,12 @@ class EventCheckoutApiController extends ApiBaseController
         //save the order to the database
         DB::commit();
         //forget the order in the session
-        session()->forget('ticket_order_' . $event->id);
+        RedisManager::del('ticket_order_' . $event->id);
 
         /*
          * Remove any tickets the user has reserved after they have been ordered for the user
          */
-        ReservedTickets::where('session_id', '=', session()->getId())->delete();
+        ReservedTickets::where('session_id', '=', auth('api')->user()->token)->delete();
 
         // Queue up some tasks - Emails to be sent, PDFs etc.
         // Send order notification to organizer

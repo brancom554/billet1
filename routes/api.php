@@ -178,32 +178,32 @@ Route::group(['middleware' => ['jwt.verify']], function() {
             /*
              * Embedded events
              */
-            // Route::get('/{event_id}/embed',
-            //     [EventViewEmbeddedController::class, 'showEmbeddedEvent']
-            // )->name('showEmbeddedEventPage');
+            Route::get('/{event_id}/embed',
+                [EventViewEmbeddedController::class, 'showEmbeddedEvent']
+            )->name('showEmbeddedEventPage');
     
-            // Route::get('/{event_id}/calendar.ics',
-            //     [EventViewController::class, 'showCalendarIcs']
-            // )->name('downloadCalendarIcs');
+            Route::get('/{event_id}/calendar.ics',
+                [EventViewApiController::class, 'showCalendarIcs']
+            )->name('downloadCalendarIcs');
     
-            // Route::get('/{event_id}/{event_slug?}',
-            //     [EventViewController::class, 'showEventHome']
-            // )->name('showEventPage');
+            Route::get('/{event_id}/{event_slug?}',
+                [EventViewApiController::class, 'showEventHome']
+            )->name('showEventPage');
     
-            // Route::post('/{event_id}/contact_organiser',
-            //     [EventViewController::class, 'postContactOrganiser']
-            // )->name('postContactOrganiser');
+            Route::post('/{event_id}/contact_organiser',
+                [EventViewApiController::class, 'postContactOrganiser']
+            )->name('postContactOrganiser');
     
-            // Route::post('/{event_id}/show_hidden',
-            //     [EventViewController::class, 'postShowHiddenTickets']
-            // )->name('postShowHiddenTickets');
+            Route::post('/{event_id}/show_hidden',
+                [EventViewApiController::class, 'postShowHiddenTickets']
+            )->name('postShowHiddenTickets');
     
             /*
              * Used for previewing designs in the backend. Doesn't log page views etc.
              */
-            // Route::get('/{event_id}/preview',
-            //     [EventViewController::class, 'showEventHomePreview']
-            // )->name('showEventPagePreview');
+            Route::get('/{event_id}/preview',
+                [EventViewApiController::class, 'showEventHomePreview']
+            )->name('showEventPagePreview');
     
             Route::post('{event_id}/checkout/',
                 [EventCheckoutApiController::class, 'postValidateTickets']

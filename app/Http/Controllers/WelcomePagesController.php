@@ -27,7 +27,7 @@ class WelcomePagesController extends Controller
     
     public function firstPage()
     {
-        $events = Event::with(["organiser"])->get();
+        $events = Event::with("organiser")->get();
         $eventsCategories = Categories::select('name')->get();
         return view('welcomePages.index', compact(['events','eventsCategories']));
     }

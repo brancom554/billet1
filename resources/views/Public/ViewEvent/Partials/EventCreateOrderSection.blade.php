@@ -224,7 +224,7 @@
     </div>
     <img src="https://cdn.attendize.com/lg.png" />
 </section>
-@if(session()->get('message'))
+{{-- @if(session()->get('message'))
     <script>showMessage('{{session()->get('message')}}');</script>
-@endif
+@endif --}}
 

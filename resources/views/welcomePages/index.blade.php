@@ -109,7 +109,7 @@
         <div class="section-wrapper">
             <div class="tabcontent">
                 <ul>
-
+                    
                     @foreach ($events as $event)
                     @if ($event->start_date->format('Y-m-d H:i:s') >= \Carbon\Carbon::now()->format('Y-m-d H:i:s') && $event->is_live == 1)
                     <li class="wow fadeInLeft" data-wow-duration="1s" data-wow-delay=".4s">
@@ -142,6 +142,9 @@
                             <a href="{{route('eventsDetails', $event->id)}}" class="btn-defult">Détails</a>
                         </div>
                     </li>
+                    @else
+                    <h5>Pas d'événements disponible</h5>
+                    @break
                     @endif
                     
                     @endforeach

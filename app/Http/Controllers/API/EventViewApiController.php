@@ -83,9 +83,8 @@ class EventViewApiController extends Controller
         }
 
         return response()->json([
-            'status'   => 'error',
+            'status'   => 'success',
             'data' => $data,
-            'messages' => $validator->messages()->toArray(),
         ]);
     }
 

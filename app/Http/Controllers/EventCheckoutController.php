@@ -62,11 +62,12 @@ class EventCheckoutController extends Controller
      */
     public function postValidateTickets(Request $request, $event_id)
     {
+        
         /*
          * Order expires after X min
          */
         $order_expires_time = Carbon::now()->addMinutes(config('attendize.checkout_timeout_after'));
-
+        
         $event = Event::findOrFail($event_id);
 
         if (!$request->has('tickets')) {
@@ -218,7 +219,7 @@ class EventCheckoutController extends Controller
             'account_payment_gateway' => $activeAccountPaymentGateway,
             'payment_gateway'         => $paymentGateway
         ]);
-
+        
         /*
          * If we're this far assume everything is OK and redirect them
          * to the the checkout page.
@@ -249,7 +250,7 @@ class EventCheckoutController extends Controller
     public function showEventCheckout(Request $request, $event_id)
     {
         $order_session = session()->get('ticket_order_' . $event_id);
-
+        // dd($order_session);
         if (!$order_session || $order_session['expires'] < Carbon::now()) {
             $route_name = $this->is_embedded ? 'showEmbeddedEventPage' : 'showEventPage';
             return redirect()->route($route_name, ['event_id' => $event_id]);
@@ -261,6 +262,7 @@ class EventCheckoutController extends Controller
 
         $orderService = new OrderService($order_session['order_total'], $order_session['total_booking_fee'], $event);
         $orderService->calculateFinalCosts();
+        // dd($orderService->calculateFinalCosts());
 
         $data = $order_session + [
                 'event'           => $event,
@@ -388,6 +390,7 @@ class EventCheckoutController extends Controller
      */
     public function postCreateOrder(Request $request, $event_id)
     {        
+        // dd($request);
         
         $request_data = $ticket_order = session()->get('ticket_order_' . $event_id . ".request_data",[0 => []]);
         $request_data = array_merge($request_data[0], $request->except(['cardnumber', 'cvc']));
