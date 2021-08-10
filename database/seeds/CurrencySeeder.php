@@ -515,6 +515,20 @@ class CurrencySeeder extends Seeder
                 'created_at' => '2015-07-22 23:25:30',
                 'updated_at' => '2015-07-22 23:25:30',
             ],
+            [
+                'id' => 37,
+                'title' => 'Francs CFA',
+                'symbol_left' => 'FCFA',
+                'symbol_right' => '',
+                'code' => 'GBP',
+                'decimal_place' => 2,
+                'value' => 0.00,
+                'decimal_point' => '.',
+                'thousand_point' => ',',
+                'status' => 1,
+                'created_at' => '2013-11-29 19:51:38',
+                'updated_at' => '2013-11-29 19:51:38',
+            ],
         ];
 
         collect($currencies)->map(function($currency) {

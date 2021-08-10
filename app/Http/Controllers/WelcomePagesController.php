@@ -17,11 +17,6 @@ class WelcomePagesController extends Controller
     public function __construct(Request $request)
     {
 
-        // $this->$kkiapay = new \Kkiapay\Kkiapay($public_key,
-        //                         $private_key, 
-        //                         $secret, 
-        //                         $sandbox = true);
-       
         
     }
     
@@ -55,13 +50,5 @@ class WelcomePagesController extends Controller
                                 $sandbox = true);
         return view('pdf');
         
-
-        // dd($kkiapay);
-        // return $kkiapay;
-
-        // $pdf = PDF::loadHTML('<h1>Test</h1>')->setPaper('a4')->setOrientation('landscape')->setOption('margin-bottom', 0);
-        // return $pdf->inline();
-        // $pdf = PDF::loadView('pdf');
-        // return $pdf->stream('essai.pdf');
     }
 }

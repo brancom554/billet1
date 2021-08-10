@@ -25,6 +25,8 @@ use App\Http\Controllers\API\EventViewApiController;
 use App\Http\Controllers\API\EventViewEmbeddedApiController;
 use App\Http\Controllers\API\EventWidgetsApiController;
 use App\Http\Controllers\API\RemindersApiController;
+use App\Http\Controllers\API\PaymentHistoryApiController;
+
 
 
 
@@ -139,6 +141,9 @@ Route::group(['middleware' => ['jwt.verify']], function() {
     Route::get('/eventD/{event_id}',
     [EventsApiController::class, 'getEventDetails'])->name('getEventDetails');
 
+    Route::get('/order_history',
+    [PaymentHistoryApiController::class, 'getHistory'])->name('getHistory');
+
     /*
      * Logout
      */
@@ -229,6 +234,14 @@ Route::group(['middleware' => ['jwt.verify']], function() {
                 [EventCheckoutApiController::class, 'postCreateOrder']
             )->name('postCreateOrder');
         });
+
+        Route::get('order/{order_reference}',
+        [EventCheckoutController::class, 'showOrderDetails']
+        )->name('showOrderDetails');
+
+        Route::get('order/{order_reference}/tickets',
+            [EventCheckoutApiController::class, 'showOrderTickets']
+        )->name('showOrderTickets');
 
         /*
          * Organiser routes

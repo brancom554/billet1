@@ -332,6 +332,7 @@ class EventCheckoutController extends Controller
             $order->messages = $order->messages + $businessMessages;
         }
 
+
         if (!$order->validate($request->all())) {
             return response()->json([
                 'status'   => 'error',
@@ -376,6 +377,7 @@ class EventCheckoutController extends Controller
                      'payment_failed' => $payment_failed
         ];
 
+
         return view('Public.ViewEvent.EventPagePayment', $viewData);
     }
 
@@ -390,7 +392,7 @@ class EventCheckoutController extends Controller
      */
     public function postCreateOrder(Request $request, $event_id)
     {        
-        // dd($request);
+        
         
         $request_data = $ticket_order = session()->get('ticket_order_' . $event_id . ".request_data",[0 => []]);
         $request_data = array_merge($request_data[0], $request->except(['cardnumber', 'cvc']));
@@ -427,7 +429,7 @@ class EventCheckoutController extends Controller
             //certain payment gateways require an extra parameter here and there so this method takes care of that
             //and sets certain options for the gateway that can be used when the transaction is started
             $gateway->extractRequestParameters($request);
-
+            
             //generic data that is needed for most orders
             $order_total = $order_service->getGrandTotal();
             $order_email = $ticket_order['request_data'][0]['order_email'];
