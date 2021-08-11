@@ -236,7 +236,7 @@ Route::group(['middleware' => ['jwt.verify']], function() {
         });
 
         Route::get('order/{order_reference}',
-        [EventCheckoutController::class, 'showOrderDetails']
+        [EventCheckoutApiController::class, 'showOrderDetails']
         )->name('showOrderDetails');
 
         Route::get('order/{order_reference}/tickets',

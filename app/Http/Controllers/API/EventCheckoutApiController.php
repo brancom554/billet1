@@ -252,10 +252,8 @@ class EventCheckoutApiController extends ApiBaseController
     public function showEventCheckout(Request $request, $event_id)
     {
         $order_session_encoded = RedisManager::get('ticket_order_' . $event_id);
-
-        dd($order_session_encoded);
         
-        $order_session = json_decode($order_session_encoded, true);
+        $order_session = json_decode($order_session_encoded);
         
         if (!$order_session || $order_session->expires < Carbon::now()) {
 
@@ -746,6 +744,9 @@ class EventCheckoutApiController extends ApiBaseController
             $order->event_id = $ticket_order['event_id'];
             $order->is_payment_received = isset($request_data['pay_offline']) ? 0 : 1;
             $order->order_date = $orderDate;
+            // $order->invoice_pdf_path = config('attendize.event_pdf_tickets_path') . '/' . $this->order_reference . '.pdf';
+
+            
 
 
             // Business details is selected, we need to save the business details
@@ -766,6 +767,7 @@ class EventCheckoutApiController extends ApiBaseController
             $orderService->calculateFinalCosts();
 
             $order->taxamt = $orderService->getTaxAmount();
+            // $order->ticket_pdf_path = config('attendize.event_pdf_tickets_path') . '/' . $order->order_reference . '.pdf';
             $order->save();
 
             /**
@@ -947,7 +949,9 @@ class EventCheckoutApiController extends ApiBaseController
         $order = Order::where('order_reference', '=', $order_reference)->first();
 
         if (!$order) {
-            abort(404);
+            return response()->json([
+                'message' => 'you must be order before execute this action'
+          ],404);
         }
 
         $orderService = new OrderService($order->amount, $order->organiser_booking_fee, $order->event);

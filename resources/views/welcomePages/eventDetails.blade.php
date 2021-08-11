@@ -100,7 +100,7 @@
     </div>
     <div class="event-venue-content text-center pb-5">
         
-        <a href="#" class="btn-defult">Reserver</a>
+        <a href="{{route('showEventPage', [$event->id, $event->title])}}" class="btn-defult">Reserver</a>
     </div>
 </section>
 @else

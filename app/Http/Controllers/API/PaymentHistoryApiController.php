@@ -23,7 +23,7 @@ class PaymentHistoryApiController extends Controller
             $orders = Order::where('is_payment_received', '=', 1)->where('account_id', '=', $this->account_id)->get()->load('event');
 
             $OrdersithSpecificData = $orders->map(function ($od) {
-                return $od->only(['first_name', 'last_name', 'email', 'order_reference', 'order_date', 'event']);
+                return $od->only(['first_name', 'last_name', 'email', 'order_reference', 'order_date', 'event', 'tickets']);
             });
 
             return response()->json([

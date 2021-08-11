@@ -109,9 +109,10 @@
         <div class="section-wrapper">
             <div class="tabcontent">
                 <ul>
-                    
+                    @dd($events);
                     @foreach ($events as $event)
-                    @if ($event->start_date->format('Y-m-d H:i:s') >= \Carbon\Carbon::now()->format('Y-m-d H:i:s') && $event->is_live == 1)
+                    @if ($event->start_date\Carbon\Carbon::now()->format('Y-m-d H:i:s' && $event->is_live === 1)
+                    
                     <li class="wow fadeInLeft" data-wow-duration="1s" data-wow-delay=".4s">
                         <div class="con-schedule">
                             <div class="con-schedule-thumb">
@@ -138,7 +139,7 @@
                             <img src="{{asset('welcome/images/speaker/ticket.png')}}" alt="meta-con">
                             <span class="con-t-text">Ticket From</span>
                             <span class="con-t-price">{{$event->ticket() ? $event->ticket()[0]['price'] : ''}}</span>
-                            <a href="#" class="btn-defult">Réserver</a>
+                            <a href="{{route('showEventPage', [$event->id, $event->title])}}" class="btn-defult">Réserver</a>
                             <a href="{{route('eventsDetails', $event->id)}}" class="btn-defult">Détails</a>
                         </div>
                     </li>

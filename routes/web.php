@@ -212,6 +212,10 @@ Route::group(
         [EventCheckoutController::class, 'showOrderDetails']
     )->name('showOrderDetails');
 
+    Route::get('order/{order_reference}/invoice',
+        [EventCheckoutController::class, 'showOrderInvoice']
+    )->name('showOrderInvoice');
+
     Route::get('order/{order_reference}/tickets',
         [EventCheckoutController::class, 'showOrderTickets']
     )->name('showOrderTickets');

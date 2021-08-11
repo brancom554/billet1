@@ -794,6 +794,37 @@ class EventCheckoutController extends Controller
         return view('Public.ViewEvent.EventPageViewOrder', $data);
     }
 
+
+    /**
+     * Show the order invoice page
+     *
+     * @param Request $request
+     * @param $order_reference
+     * @return \Illuminate\View\View
+     */
+    public function showOrderInvoice(Request $request, $order_reference)
+    {
+        $order = Order::where('order_reference', '=', $order_reference)->first();
+
+        if (!$order) {
+            abort(404);
+        }
+
+        $orderService = new OrderService($order->amount, $order->organiser_booking_fee, $order->event);
+        $orderService->calculateFinalCosts();
+
+        $data = [
+            'order'        => $order,
+            'orderService' => $orderService,
+            'event'        => $order->event,
+            'tickets'      => $order->event->tickets,
+            'is_embedded'  => $this->is_embedded,
+        ];
+
+        $pdf = PDF::loadView('Public.ViewEvent.InvoicePage', $data);
+        return $pdf->stream('Invoice'.$order_reference.'.pdf');
+    }
+
     /**
      * Shows the tickets for an order - either HTML or PDF
      *
@@ -828,7 +859,7 @@ class EventCheckoutController extends Controller
         if ($request->get('download') == '1') {
             // return PDF::loadView('Public.ViewEvent.Partials.PDFTicket', $data, 'Tickets');
         $pdf = PDF::loadView('Public.ViewEvent.Partials.PDFTicket', $data);
-        return $pdf->stream('Tickets.pdf');
+        return $pdf->stream('Tickets'.$order_reference.'.pdf');
 
         }
         return view('Public.ViewEvent.Partials.PDFTicket', $data);
