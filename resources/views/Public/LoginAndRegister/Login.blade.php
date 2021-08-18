@@ -34,7 +34,7 @@
                     <div class="form-group">
                         <p><input class="btn btn-block btn-success" type="submit" value="@lang('User.login')"></p>
                     </div>
-
+                    
                     @if(Utils::isAttendize())
                     <div class="signup">
                         <span>@lang("User.dont_have_account_button", ["url"=> route('showSignup')])</span>

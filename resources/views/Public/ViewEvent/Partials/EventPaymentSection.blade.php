@@ -65,9 +65,8 @@
         </div>
         <div class="col-md-8 col-md-pull-4">
             <div class="row">
-
                 @if($order_requires_payment)
-                @include('Public.ViewEvent.Partials.OfflinePayments')
+                @include('Public.ViewEvent.Partials.OfflinePayments', ['order_total' => $order_total])
                 @endif
                 {{-- A revoir pour decommenter --}}
                 

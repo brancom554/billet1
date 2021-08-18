@@ -29,8 +29,8 @@
 			            <ul class="m-menu">
 			                <li><a href="{{route('accueil')}}">Accueil</a> 
 			                </li>
-			                <li class="register"><a  href="#">S'enrégistrer</a></li>
-			                <li><a href="#">Connexion</a></li>
+			                <li class="register"><a  href="{{route('signup')}}">S'enrégistrer</a></li>
+			                <li><a href="{{route('login')}}">Connexion</a></li>
 			        </div>
 			    </div>
 			</nav>
@@ -46,7 +46,7 @@
 				<div class="container container-1310">
 					<div class="menu-area">
 						<div class="row no-gutters justify-content-between align-items-center">
-							<a href="index.html" class="logo">
+							<a href="{{route('accueil')}}" class="logo">
 								<img width="100" height="100" src="{{asset('welcome/images/logo.png')}}" alt="logo">
 								<img width="100" height="100" src="{{asset('welcome/images/logo.png')}}" alt="logo">
 							</a>

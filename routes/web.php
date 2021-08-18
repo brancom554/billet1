@@ -71,6 +71,9 @@ Route::group(
 
     Route::get('/paymentGateway', [WelcomePagesController::class, 'payment']);
 
+    Route::get('/details/{event_id}', [EventCheckoutController::class, 'kkiapayPayment'])->name('kkiapayPayment');
+
+
 
 
 
@@ -219,6 +222,10 @@ Route::group(
     Route::get('order/{order_reference}/tickets',
         [EventCheckoutController::class, 'showOrderTickets']
     )->name('showOrderTickets');
+
+    Route::get('order/{order_reference}/ticketPdf',
+        [EventCheckoutController::class, 'pdfTickets']
+        )->name('pdfTickets');
 
     /*
      * Backend routes

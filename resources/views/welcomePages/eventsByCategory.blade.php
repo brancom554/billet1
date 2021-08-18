@@ -6,7 +6,7 @@
     <div class="container container-1310">
         <div class="row my-15">
 
-            @foreach ($events as $event)
+            @forelse ($events as $event)
             <div class="col-md-6">
                 <div class="venue-item">
                     <div class="venue-thumb">
@@ -35,7 +35,9 @@
                     </div>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <h4> Pas d'événements disponible pour cette catégorie</h4>
+            @endforelse
 
         </div>
         <div class="pagination-area  d-flex flex-wrap justify-content-center">

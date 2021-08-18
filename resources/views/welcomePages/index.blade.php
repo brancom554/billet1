@@ -71,7 +71,7 @@
             <div class="feature-block-two col-lg-3 col-md-6 col-sm-12 wow fadeInUp" data-wow-delay="800ms">
                 <div class="inner-box">
                 <div class="icon"><img src="{{asset('welcome/images/resource/feature-3.png')}}" alt=""></div>
-                <h4><a href="{{route('eventsByCategory', $eventsCategories[0]->name)}}">{{$eventsCategories[5]->name}}</a></h4>
+                <h4><a href="{{route('eventsByCategory', $eventsCategories[5]->name)}}">{{$eventsCategories[5]->name}}</a></h4>
                 <div class="text">Ex vim lorem homero. Te sit mutat graece deserunt ea has. Sumo</div>
                 <div class="link-box"><a href="{{route('eventsByCategory', $eventsCategories[0]->name)}}">Voir les événements</a></div>
                 </div>
@@ -109,9 +109,9 @@
         <div class="section-wrapper">
             <div class="tabcontent">
                 <ul>
-                    @dd($events);
-                    @foreach ($events as $event)
-                    @if ($event->start_date\Carbon\Carbon::now()->format('Y-m-d H:i:s' && $event->is_live === 1)
+                    @forelse ($events as $event)
+
+                    @if ($event->start_date >= \Carbon\Carbon::now()->format('Y-m-d H:i:s') && $event->is_live == 1)
                     
                     <li class="wow fadeInLeft" data-wow-duration="1s" data-wow-delay=".4s">
                         <div class="con-schedule">
@@ -143,12 +143,14 @@
                             <a href="{{route('eventsDetails', $event->id)}}" class="btn-defult">Détails</a>
                         </div>
                     </li>
-                    @else
-                    <h5>Pas d'événements disponible</h5>
-                    @break
-                    @endif
                     
-                    @endforeach
+                    @endif
+
+                    @empty
+
+                    <h4>Pas d'événement disponible</h4>
+
+                    @endforelse
                     
                     
                 </ul>
@@ -179,7 +181,7 @@
             <div class="blog-slider">
                 <div class="swiper-wrapper">
                     @foreach ($events as $event)
-                    @if ($event->end_date->format('Y-m-d H:i:s') <= \Carbon\Carbon::now()->format('Y-m-d H:i:s') && $event->is_live == 1)
+                    @if ($event->end_date <= \Carbon\Carbon::now()->format('Y-m-d H:i:s') && $event->is_live == 1)
                     <div class="swiper-slide wow fadeInUp" data-wow-duration="1s" data-wow-delay=".1s">
                         <div class="post-item">
                             <div class="post-item-inner">

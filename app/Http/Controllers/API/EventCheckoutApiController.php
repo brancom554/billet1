@@ -310,6 +310,8 @@ class EventCheckoutApiController extends ApiBaseController
 
     public function postValidateOrder(Request $request, $event_id)
     {
+
+        // dd($request);
         
         //If there's no session kill the request and redirect back to the event homepage.
 
@@ -836,7 +838,6 @@ class EventCheckoutApiController extends ApiBaseController
                  * Create the attendees
                  */
                 for ($i = 0; $i < $attendee_details['qty']; $i++) {
-
                     $attendee = new Attendee();
                     $attendee->first_name = sanitise($request_data["ticket_holder_first_name"][$i][$attendee_details['ticket']['id']]);
                     $attendee->last_name = sanitise($request_data["ticket_holder_last_name"][$i][$attendee_details['ticket']['id']]);

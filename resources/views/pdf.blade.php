@@ -7,16 +7,26 @@
     <title>Document</title>
 </head>
 <body>
-        <kkiapay-widget amount="2000" 
+
+    <kkiapay-widget amount="2000"
+        key="24d1d480da4211ebb78cf3a40dbc99e1"
+        url="{{asset('welcome/images/logo.png')}}"
+        position="center"
+        sandbox="true"
+        data=""
+        callback={{route('postCreateOrder')}}>
+    </kkiapay-widget>
+
+        {{-- <kkiapay-widget amount="2000" 
             key="24d1d480da4211ebb78cf3a40dbc99e1"
             url="{{asset('welcome/images/logo.png')}}"
             position="center"
             sandbox="true"
             data="1"
             callback="http://localhost:8000/paymentGateway">
-        </kkiapay-widget>
+        </kkiapay-widget> --}}
 
-        <script amount="2000" 
+        {{-- <script amount="2000" 
             name="CHEDE CEDRIC"
             callback="http://localhost:8000/paymentGateway"
             data="1"
@@ -36,8 +46,7 @@
             theme:"green",
             key:"24d1d480da4211ebb78cf3a40dbc99e1"})
 
-            
-
-        </script>   
+        </script>    --}}
+        <script src="https://cdn.kkiapay.me/k.js"></script>
 </body>
 </html>

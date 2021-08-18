@@ -98,14 +98,21 @@
             </div>
         </div>
     </div>
+    @if ($event->start_date >= \Carbon\Carbon::now()->format('Y-m-d H:i:s'))
     <div class="event-venue-content text-center pb-5">
-        
         <a href="{{route('showEventPage', [$event->id, $event->title])}}" class="btn-defult">Reserver</a>
     </div>
+    @else
+    <div class="event-venue-content text-center pt-5 pb-5">
+        <h5>Les réservations ne sont plus possible car l'événement a commencé'</h5>
+    </div>
+    @endif
 </section>
 @else
     <h2 class="mt-5 pt-5 mb-5 pb-5">Cet événement n'existe pas</h2>
 @endif
+
+
 
 <!-- event venues details section ending here -->
 @endsection

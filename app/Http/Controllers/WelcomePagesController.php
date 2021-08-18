@@ -29,7 +29,7 @@ class WelcomePagesController extends Controller
 
     public function eventsByCategory($name)
     {
-        $events = Event::where('category', '=', $name)->get();
+        $events = Event::where('category', '=', $name)->where('is_live', '=', 1)->get();
         return view('welcomePages.eventsByCategory', compact('events'));
     }
 

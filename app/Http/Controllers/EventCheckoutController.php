@@ -377,8 +377,28 @@ class EventCheckoutController extends Controller
                      'payment_failed' => $payment_failed
         ];
 
-
         return view('Public.ViewEvent.EventPagePayment', $viewData);
+    }
+
+    public function kkiapayPayment(Request $request, $event_id) 
+    {
+
+        if($request->transaction_id){
+
+            $credentials = request(['transaction_id']);
+            $validator = Validator::make($credentials, [
+                'transaction_id' => 'required|string',
+            ]);
+
+
+            if ($validator->fails()) {
+                    return response()->json($validator->errors(), 422);
+                }
+
+                return $this->postCreateOrder($request, $event_id);
+        }
+
+        
     }
 
     /**
@@ -393,7 +413,6 @@ class EventCheckoutController extends Controller
     public function postCreateOrder(Request $request, $event_id)
     {        
         
-        
         $request_data = $ticket_order = session()->get('ticket_order_' . $event_id . ".request_data",[0 => []]);
         $request_data = array_merge($request_data[0], $request->except(['cardnumber', 'cvc']));
 
@@ -402,8 +421,6 @@ class EventCheckoutController extends Controller
 
         $ticket_order = session()->get('ticket_order_' . $event_id);
         $event = Event::findOrFail($event_id);
-
-        // $order_requires_payment = 1;
         
         $order_requires_payment = $ticket_order['order_requires_payment'];
 
@@ -414,6 +431,17 @@ class EventCheckoutController extends Controller
         if (!$order_requires_payment) {
             return $this->completeOrder($event_id);
         }
+        $kkiapay = new \Kkiapay\Kkiapay('24d1d480da4211ebb78cf3a40dbc99e1',
+        'tpk_24d1fb91da4211ebb78cf3a40dbc99e1', 
+        'tsk_24d222a0da4211ebb78cf3a40dbc99e1', 
+        $sandbox = true);
+
+        $kkiapay->verifyTransaction($request->transaction_id);
+
+        // dd($kkiapay->verifyTransaction($request->transaction_id));
+
+        if ($kkiapay->verifyTransaction($request->transaction_id)->status === "SUCCESS") {
+
         return $this->completeOrder($event_id);
 
         try {
@@ -491,6 +519,34 @@ class EventCheckoutController extends Controller
             ]);
         }
 
+        }else if($kkiapay->verifyTransaction($request->transaction_id)->status === "TRANSACTION_NOT_FOUND"){
+
+             return response()->json([
+             'status' => 'error',
+             'message' => 'Votre transaction n\'a pas été n\'exite pas',
+         ],404);
+
+        }else if($kkiapay->verifyTransaction($request->transaction_id)->status === "FAILED"){
+            return response()->json([
+                'deposit' => 'false',
+                'message' => 'versement non effectué, veuillez contactez l\'assistance pour plus d\'information',
+                'data' =>  [ 
+                    'received_at' => $kkiapay->verifyTransaction($request->transaction_id)->received_at,
+                    'reason' => $kkiapay->verifyTransaction($request->transaction_id)->reason,
+                    'source' => $kkiapay->verifyTransaction($request->transaction_id)->source,
+                    'amount' => $kkiapay->verifyTransaction($request->transaction_id)->amount, 
+                    'fullname' => $kkiapay->verifyTransaction($request->transaction_id)->client,
+                    'transactionId' => $kkiapay->verifyTransaction($request->transaction_id)->transactionId  
+                ]
+            ],200);
+            
+        }else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Nous n\'avons pas de réponse pour votre requete',
+            ],404);
+        }
+
     }
 
     /**
@@ -554,6 +610,23 @@ class EventCheckoutController extends Controller
             /*
              * Create the order
              */
+
+            // dd(request('transaction_id'));
+
+            if (request('transaction_id')) {
+
+                $checkTransactionId = $order->where('transaction_id', '=', request('transaction_id'))->first();
+
+                    if ($checkTransactionId === null) {
+                        $order->transaction_id = request('transaction_id');
+                    } else {
+                        return response()->json([
+                              'status' => 'error',
+                              'message' => 'Votre transaction_id existe déja',
+                        ],404);
+                    }
+            }
+           
             if (isset($ticket_order['transaction_id'])) {
                 $order->transaction_id = $ticket_order['transaction_id'][0];
             }
@@ -743,20 +816,27 @@ class EventCheckoutController extends Controller
             Log::debug('Queueing Attendee Ticket Job Done');
         }
 
-        if ($return_json) {
-            return response()->json([
-                'status'      => 'success',
-                'redirectUrl' => route('showOrderDetails', [
-                    'is_embedded'     => $this->is_embedded,
-                    'order_reference' => $order->order_reference,
-                ]),
-            ]);
-        }
+        // if ($return_json) {
+            // return response()->json([
+            //     'status'      => 'success',
+            //     'redirectUrl' => route('showOrderDetails', [
+            //         'is_embedded'     => $this->is_embedded,
+            //         'order_reference' => $order->order_reference,
+            //     ]),
+            // ]);
 
-        return response()->redirectToRoute('showOrderDetails', [
+            // return view('showOrderDetails', ['is_embedded'     => $this->is_embedded, 'order_reference' => $order->order_reference,]);
+        // }
+
+        return redirect()->route('showOrderDetails', [
             'is_embedded'     => $this->is_embedded,
             'order_reference' => $order->order_reference,
         ]);
+
+        // return response()->redirectToRoute('showOrderDetails', [
+        //     'is_embedded'     => $this->is_embedded,
+        //     'order_reference' => $order->order_reference,
+        // ]);
 
 
     }
@@ -792,6 +872,36 @@ class EventCheckoutController extends Controller
         }
 
         return view('Public.ViewEvent.EventPageViewOrder', $data);
+    }
+
+    public function pdfTickets(Request $request, $order_reference)
+    {
+        $order = Order::where('order_reference', '=', $order_reference)->first();
+
+        if (!$order) {
+            abort(404);
+        }
+        $images = [];
+        $imgs = $order->event->images;
+        foreach ($imgs as $img) {
+            $images[] = base64_encode(file_get_contents(public_path($img->image_path)));
+        }
+
+        $data = [
+            'order'     => $order,
+            'event'     => $order->event,
+            'tickets'   => $order->event->tickets,
+            'attendees' => $order->attendees,
+            'css'       => file_get_contents(public_path('assets/stylesheet/ticket.css')),
+            'image'     => base64_encode(file_get_contents(public_path($order->event->organiser->full_logo_path))),
+            'images'    => $images,
+        ];
+       
+
+       
+        $pdf = PDF::loadView('Public.ViewEvent.Partials.PDFTicket', $data);
+        return $pdf->stream('Tickets'.$order_reference.'.pdf');
+
     }
 
 
