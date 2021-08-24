@@ -475,9 +475,7 @@ class EventCheckoutApiController extends ApiBaseController
         'tsk_24d222a0da4211ebb78cf3a40dbc99e1', 
         $sandbox = true);
 
-        $kkiapay->verifyTransaction($request->transaction_id);
-
-        if ($kkiapay->verifyTransaction($request->transaction_id)->status === "SUCCESS") {
+        if ($kkiapay->verifyTransaction($request->transaction_id)->status === "SUCCESS" && $kkiapay->verifyTransaction($request->transaction_id)->amount === (int)$ticket_order['order_total']) {
 
             RedisManager::set('order_date', $kkiapay->verifyTransaction($request->transaction_id)->received_at);
  

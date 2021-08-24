@@ -186,7 +186,7 @@
                         <div class="post-item">
                             <div class="post-item-inner">
                                 <div class="post-thumb">
-                                    <a href="{{route('eventsDetails', $event->id)}}"><img src="{{asset($event->image() ? $event->image()[0]['image_path'] : '')}}" style="object-fit:contain;
+                                    <a href="{{route('eventsDetails', $event->id)}}"><img src="{{asset($event->image() ? $event->image()[0]['image_path'] : 'welcome/css/images/corporate.png')}}" style="object-fit:contain;
                                         width:410px;
                                         height:300px;" alt="blog"></a>
                                 </div>
@@ -195,7 +195,7 @@
                                     <h5><a href="#">{{$event->title}}</a></h5>
                                     <p>{{$event->description}}</p>
                                     <div class="meta-post">
-                                        <span class="by"> Organisé par <a class="name" href="{{route('eventsDetails', $event->id)}}">{{$event->organiser->name}}</a><a class="date" href="{{route('eventsDetails', $event->id)}}"></a><img src="welcome/images/blog/meta.png" alt="organizer"></span>
+                                        <span class="by"> Organisé par <a class="name" href="{{route('eventsDetails', $event->id)}}">{{$event->organiser->name}}</a><a class="date" href="{{route('eventsDetails', $event->id)}}"></a><img  src="{{$event->organiser->logo_path ? $event->organiser->logo_path : 'welcome/images/blog/meta.png'}}" class="organiser_image" alt="organizer"></span>
                                     </div>
                                 </div>
                             </div>

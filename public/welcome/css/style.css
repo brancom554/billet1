@@ -11936,6 +11936,15 @@ textarea {
   border: 1px solid black;
 }
 
+.organiser_image {
+  width : 40px; 
+  height : 40px;
+  border: none;
+  -moz-border-radius : 50%;
+  -webkit-border-radius : 50%;
+  border-radius : 50%;
+}
+
 
 
 

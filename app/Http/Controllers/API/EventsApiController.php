@@ -46,7 +46,9 @@ class EventsApiController extends ApiBaseController
     public function getAllEvents(Request $request)
     {
         $data = [
-            'event' => Event::with('organiser')->paginate(25)
+            'events' => Event::with(['getOneImagePerEvent' => function ($query) {
+                $query->select('image_path', 'event_id');
+              }, 'organiser'])->paginate(15)
         ];
 
         return response()->json([
@@ -59,7 +61,9 @@ class EventsApiController extends ApiBaseController
     public function getEventDetails(Request $request, $event_id)
     {
         $data = [
-            'event' => Event::with('organiser')->findOrFail($event_id)
+            'event' => Event::with(['getOneImagePerEvent' => function ($query) {
+                $query->select('image_path', 'event_id');
+              }, 'organiser'])->findOrFail($event_id)
         ];
 
         return response()->json([

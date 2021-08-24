@@ -82,6 +82,11 @@ class Event extends MyBaseModel
         return $this->hasMany(EventImage::class);
     }
 
+    public function getOneImagePerEvent()
+    {
+        return $this->hasOne(EventImage::class);
+    }
+
     public function image()
     {
         return $this->hasMany(EventImage::class)->select('image_path')->get()->toArray();

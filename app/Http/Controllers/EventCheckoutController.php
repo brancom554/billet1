@@ -388,6 +388,7 @@ class EventCheckoutController extends Controller
             $credentials = request(['transaction_id']);
             $validator = Validator::make($credentials, [
                 'transaction_id' => 'required|string',
+
             ]);
 
 
@@ -420,6 +421,7 @@ class EventCheckoutController extends Controller
         session()->push('ticket_order_' . $event_id . '.request_data', $request_data);
 
         $ticket_order = session()->get('ticket_order_' . $event_id);
+
         $event = Event::findOrFail($event_id);
         
         $order_requires_payment = $ticket_order['order_requires_payment'];
@@ -436,11 +438,9 @@ class EventCheckoutController extends Controller
         'tsk_24d222a0da4211ebb78cf3a40dbc99e1', 
         $sandbox = true);
 
-        $kkiapay->verifyTransaction($request->transaction_id);
+        if ($kkiapay->verifyTransaction($request->transaction_id)->status === "SUCCESS" && $kkiapay->verifyTransaction($request->transaction_id)->amount === (int)$ticket_order['order_total']) {
 
-        // dd($kkiapay->verifyTransaction($request->transaction_id));
-
-        if ($kkiapay->verifyTransaction($request->transaction_id)->status === "SUCCESS") {
+            
 
         return $this->completeOrder($event_id);
 
